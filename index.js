@@ -63,6 +63,45 @@ async function run() {
         blogs
       });
     });
+    // UPDATE SINGLE Blog DETAILS
+    app.put('/blog/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedBlog = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          title: updatedBlog.title,
+          about: updatedBlog.about,
+          img: updatedBlog.img,
+          category: updatedBlog.category,
+          author: updatedBlog.author
+        },
+      };
+      const result = await blogsCollection.updateOne(filter, updateDoc, options)
+      res.json(result)
+    })
+    // UPDATE SINGLE Blog Coment DETAILS
+    app.put('/addBlogComment/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedBlog = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $push: {
+          comments: updatedBlog
+        },
+      };
+      const result = await blogsCollection.updateOne(filter, updateDoc, options)
+      res.json(result)
+    })
+    // DELETE SINGLE BLOG DATA
+    app.delete('/blog/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) }
+      const result = await blogsCollection.deleteOne(query)
+      res.json(result)
+    })
     //add blog in database
     app.post('/blogs', async (req, res) => {
       const blog = req.body;
