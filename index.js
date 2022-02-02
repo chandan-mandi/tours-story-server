@@ -75,7 +75,8 @@ async function run() {
           about: updatedBlog.about,
           img: updatedBlog.img,
           category: updatedBlog.category,
-          author: updatedBlog.author
+          author: updatedBlog.author,
+          expense: updatedBlog.expense
         },
       };
       const result = await blogsCollection.updateOne(filter, updateDoc, options)
@@ -92,7 +93,30 @@ async function run() {
           comments: updatedBlog
         },
       };
-      const result = await blogsCollection.updateOne(filter, updateDoc, options)
+      const addComment = await blogsCollection.updateOne(filter, updateDoc, options);
+      async function calcAverageRating(ratings) {
+        let totalRatings = 0;
+        if(ratings){
+          ratings.forEach((rating, index) => {
+            totalRatings += rating.rating;
+          });
+          const averageRating = totalRatings / ratings.length;
+  
+          return averageRating.toFixed(1);
+        } else {
+          return totalRatings;
+        }
+
+      }
+      const blog = await blogsCollection.findOne(filter);
+      const avgRating = await calcAverageRating(blog.comments)
+
+      const updateDoc2 = {
+        $set: {
+          rating: avgRating
+        },
+      };
+      const result = await blogsCollection.updateOne(filter, updateDoc2, options)
       res.json(result)
     })
     // DELETE SINGLE BLOG DATA
@@ -136,8 +160,8 @@ async function run() {
       }
     });
     // GET APPROVED BLOG
-    app.get("/approveBlog", async(req, res) => {
-      const statusCheck = {status : "Approved"};
+    app.get("/approveBlog", async (req, res) => {
+      const statusCheck = { status: "Approved" };
       const cursor = await blogsCollection.find(statusCheck);
       const page = req.query.page;
       const size = parseInt(req.query.size);
@@ -150,7 +174,8 @@ async function run() {
       }
       res.json({
         pageCount,
-        blogs})
+        blogs
+      })
     })
     // SINGLE BLOG FIND
     app.get("/blog/:id", async (req, res) => {
