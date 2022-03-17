@@ -5,6 +5,7 @@ const port = process.env.PORT || 5000;
 const { MongoClient } = require("mongodb");
 const ObjectId = require('mongodb').ObjectId;
 const admin = require("firebase-admin");
+const e = require("express");
 require("dotenv").config();
 
 
@@ -159,6 +160,28 @@ async function run() {
         res.status(401).json({ message: 'User Not Authorized' });
       }
     });
+    // sort blog 
+    app.get('/sort-blog', async(req, res) => {
+      const cursor = await blogsCollection.find({}).toArray();
+      const sortedExpenses = cursor.sort(function (a, b) {
+        const intA = parseInt(a.expense)
+        const intB = parseInt(b.expense)
+        return intA - intB;
+      })
+      res.json(sortedExpenses)
+    })
+    // search blog 
+    app.get('/search-blogs', async(req, res) => {
+      const search = req.query.search;
+      const cursor = await blogsCollection.find({}).toArray();
+      console.log(cursor);
+      if(search){
+        const searchResult  = cursor.filter(blog => blog.title.toLocaleLowerCase().includes(search));
+        res.send(searchResult)
+      } else {
+        res.send(cursor)
+      }
+    })
     // GET APPROVED BLOG
     app.get("/approveBlog", async (req, res) => {
       const statusCheck = { status: "Approved" };
